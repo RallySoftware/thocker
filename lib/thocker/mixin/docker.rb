@@ -50,9 +50,14 @@ module Thocker
           begin
             yield container
           ensure
-            Thocker.ui.banner "Removing container #{container.id}"
-            container.stop
-            container.remove
+            if opts[:destroy]
+              Thocker.ui.banner "Removing container #{container.id}"
+              container.stop
+              container.remove
+            else
+              Thocker.ui.banner "Not removing #{container.id} by request of user."
+            end
+
           end
         end
 

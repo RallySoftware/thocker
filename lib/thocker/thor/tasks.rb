@@ -1,4 +1,7 @@
 require 'thocker'
+require 'rspec/core'
+require 'serverspec'
+require 'net/ssh'
 
 #
 # Project tasks. These tasks are intended to be included from a project's
@@ -10,10 +13,6 @@ module Thocker
     include Thocker::Mixin::DockerAPI
     include Thocker::Mixin::Net
 
-    RSpec::Core::RakeTask.new(:spec) do |t|
-      t.pattern = 'spec/*/*_spec.rb'
-    end
-
     namespace :default
 
     def initialize(*args)
@@ -21,6 +20,11 @@ module Thocker
       Docker.url = "tcp://#{docker_host}:#{docker_port}"
     end
 
+    method_option :destroy,
+      type: :boolean,
+      default: true,
+      aliases: '-d',
+      desc: 'Destroy the container after running the tests.'
     desc 'spec', 'Run all of the specs against a running container'
     def spec
       image = create_image(image_name, dev_tag, options)
@@ -44,16 +48,59 @@ module Thocker
 
     def run_tests(image, opts)
       create_container(image, opts) do |container|
-        port = container.mapped_port_for(22)
+        ssh_port = container.mapped_port_for(22)
 
-        wait_for_container(docker_host, port)
+        wait_for_container(docker_host, ssh_port)
 
         Thocker.ui.banner "Running all the tests..."
 
-        ENV['DOCKER_SSH_PORT'] = port
-        ENV['DOCKER_SSH_KEY'] = dev_key
-        ENV['DOCKER_HOST'] = docker_host
-        Rake::Task["spec"].execute
+        prepare_rspec(container, ssh_port)
+        RSpec::Core::Runner.run(['spec'])
+      end
+    end
+
+    #
+    # Get ready to run rspec tests.
+    # - Add settings to the RSpec config object which contain
+    #   docker/container specific information
+    # - Setup serverspec by configurting net/ssh
+    def prepare_rspec(container, ssh_port)
+      add_rspec_settings(container, ssh_port)
+      setup_serverspec
+    end
+
+    #
+    # Pass along container information so that
+    # rspec tests have access to it.
+    def add_rspec_settings(container, ssh_port)
+      RSpec.configure do |c|
+        c.add_setting :docker_ports
+        c.docker_ports = container.ports
+        c.add_setting :docker_host
+        c.docker_host = docker_host
+        c.add_setting :dev_key
+        c.dev_key = dev_key
+        c.add_setting :ssh_port
+        c.ssh_port = ssh_port
+      end
+    end
+
+    #
+    # Configure serverspec by setting up net/ssh in
+    # a before all.
+    def setup_serverspec
+      RSpec.configure do |c|
+        c.before(:all) do
+          if c.host != c.docker_host
+            c.ssh.close if c.ssh
+            c.host = c.docker_host
+            options = Net::SSH::Config.for(c.host)
+            options[:key_data] = [c.dev_key]
+            options[:user] = 'root'
+            options[:port] = c.ssh_port
+            c.ssh = Net::SSH.start(c.host, options[:user], options)
+          end
+        end
       end
     end
 
