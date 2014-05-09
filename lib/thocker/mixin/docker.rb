@@ -12,7 +12,7 @@ module Thocker
 
         repo_and_tag = "#{repository}:#{tag}"
         build_opts = {'t' => repo_and_tag, 'rm' => true }
-        build_opts['nocache'] = opts[:no_cache]
+        build_opts['nocache'] = !opts[:cache]
         image = Docker::Image.build_from_dir('.', build_opts) do |chunk|
           print_docker_response(chunk)
         end

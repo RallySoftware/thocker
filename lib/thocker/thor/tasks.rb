@@ -23,8 +23,11 @@ module Thocker
     method_option :destroy,
       type: :boolean,
       default: true,
-      aliases: '-d',
       desc: 'Destroy the container after running the tests.'
+    method_option :cache,
+      type: :boolean,
+      default: true,
+      desc: 'Use the cache when building the image.'
     desc 'spec', 'Run all of the specs against a running container'
     def spec
       image = create_image(image_name, dev_tag, options)
@@ -33,10 +36,14 @@ module Thocker
 
     desc 'ci', 'Builds the image, tests it and if tests pass it publishes to a docker registry'
     def ci
+      opts = options.merge({
+        destroy: true,
+        cache: false})
+
       bump_version
-      create_image(repository_name, current_version, options) do |image|
-        run_tests(image, options)
-        publish_image(image, [current_version, 'latest'], options)
+      create_image(repository_name, current_version, opts) do |image|
+        run_tests(image, opts)
+        publish_image(image, [current_version, 'latest'], opts)
       end
     end
 
