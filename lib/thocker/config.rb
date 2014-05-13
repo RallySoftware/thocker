@@ -54,5 +54,7 @@ module Thocker
       type: String
     attribute 'container.ssh_key_file',
       type: String
+    attribute 'container.env',
+      type: Array
   end
 end

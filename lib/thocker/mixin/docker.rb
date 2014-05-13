@@ -37,9 +37,11 @@ module Thocker
       # The container object is returned.
       def create_container(image, opts)
         Thocker.ui.banner "Creating container..."
+
         container = Docker::Container.create({
           'Image' => image.id,
-          'Volumes' => { '/root/.ssh' => {} }})
+          'Volumes' => { '/root/.ssh' => {} },
+          'Env' => Thocker.config.container.env || []})
 
         Thocker.ui.banner "Starting container..."
         container = container.start({
