@@ -43,7 +43,8 @@ module Thocker
       bump_version
       create_image(repository_name, current_version, opts) do |image|
         run_tests(image, opts)
-        publish_image(image, [current_version, 'latest'], opts)
+        tag_image(image, repository_name, 'latest')
+        publish_image(image, ['latest', current_version], opts)
       end
     end
 

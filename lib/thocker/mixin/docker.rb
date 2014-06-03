@@ -66,12 +66,16 @@ module Thocker
         container
       end
 
+      def tag_image(image, repository_name, tag)
+        image.tag(repo: repository_name, tag: tag.to_s)
+      end
+
       def publish_image(image, tags, opts)
         Thocker.ui.banner "Publishing image..."
         image.refresh!
 
         tags.each do |tag|
-          image.push(nil, tag: tag)
+          image.push(nil, tag: tag.to_s)
         end
       end
 
