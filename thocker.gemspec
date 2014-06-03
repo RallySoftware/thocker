@@ -24,8 +24,9 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'thor'
   spec.add_dependency 'thor-scmversion'
   spec.add_dependency 'serverspec'
-  spec.add_dependency 'docker-api'
-  spec.add_dependency 'rspec'
+  spec.add_dependency 'docker-api', '1.10.11'
+  spec.add_dependency 'excon', '0.33.0'
+  spec.add_dependency 'rspec', '~> 2.0'
   spec.add_dependency 'mixlib-shellout'
   spec.add_dependency 'buff-config'
 end

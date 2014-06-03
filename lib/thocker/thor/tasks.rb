@@ -121,19 +121,19 @@ module Thocker
     end
 
     def image_name
-      Thocker.config.image.name
+      Thocker.config.image[:name]
     end
 
     def registry
-      Thocker.config.docker.registry.url
+      Thocker.config.docker[:registry][:url]
     end
 
     def docker_host
-      Thocker.config.docker.host
+      Thocker.config.docker[:host]
     end
 
     def docker_port
-      Thocker.config.docker.port
+      Thocker.config.docker[:port]
     end
 
     def dev_tag
