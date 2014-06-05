@@ -18,6 +18,7 @@ module Thocker
     def initialize(*args)
       super
       Docker.url = "tcp://#{docker_host}:#{docker_port}"
+      Docker.options = { :read_timeout => 300 }
     end
 
     method_option :destroy,
